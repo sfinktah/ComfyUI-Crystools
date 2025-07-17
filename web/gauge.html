@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVG Replication</title>
+    <style>
+        body {
+            margin: 0;
+            background: #0a0a0a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+<svg width="300" height="300" viewBox="0 0 300 300">
+    <!-- Matte bezel with dark grey-green tint -->
+    <circle cx="150" cy="150" r="152" fill="#050805"/> <!-- outer ring: deep green-black kinda drop shadow-->
+    <circle cx="150" cy="150" r="150" fill="#0c120c"/> <!-- recessed bezel center -->
+    <circle cx="150" cy="150" r="133" fill="none" stroke="#1a2a1a" stroke-width="1"/> <!-- bevel edge -->
+    <circle cx="150" cy="150" r="132" fill="none" stroke="#3a4a3a" stroke-width="1"/> <!-- soft inner edge -->
+    <circle cx="150" cy="150" r="130" fill="#060906" stroke="none" stroke-width="0"/>
+    <!-- segment-area background color -->
+
+    <!-- Glow ring background -->
+    <circle cx="150" cy="150" r="90" fill="#050805"/> <!-- outer ring: deep green-black kinda drop shadow-->
+    <circle cx="150" cy="150" r="88" fill="#0c120c"/> <!-- recessed bezel center -->
+    <circle cx="150" cy="150" r="87" fill="#0f130f"/>
+    <circle cx="150" cy="150" r="78" fill="#000000" stroke="#000000" stroke-width="2"/> <!-- bevel edge -->
+    <!--  <circle cx="150" cy="150" r="77" fill="none" stroke="#3a4a3a" stroke-width="1"/> &lt;!&ndash; soft inner edge &ndash;&gt;-->
+
+    <!-- Glow effect (only shows on the unlit segments AFAIK) -->
+    <defs>
+        <filter id="glow">
+            <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="#00ff00" flood-opacity="0.5"/>
+        </filter>
+
+        <filter id="segment-glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="#00ff00">
+                <!-- animation is barely visible and could be removed to save browser stress -->
+                <animate attributeName="flood-opacity" values="0.4;0.7;0.4" dur="1.5s" repeatCount="indefinite"/>
+            </feDropShadow>
+        </filter>
+    </defs>
+
+    <!-- Segments -->
+    <g id="segments" transform="translate(150,150)" filter="url(#glow)">
+    </g>
+
+    <!-- Inner dome -->
+    <radialGradient id="dome" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#00ff00" stop-opacity="0.075"/>
+        <stop offset="100%" stop-color="#000000" stop-opacity="0.111145"/>
+    </radialGradient>
+    <circle cx="150" cy="150" r="77" fill="#00000088"/>
+    <circle cx="150" cy="150" r="76" fill="url(#dome)"/>
+
+    <!-- Center text -->
+    <text x="150" y="150" font-size="42" font-weight="300" text-anchor="middle" fill="#00ff00aa" style="
+        font-family: &quot;HD44780 5x8&quot;;
+        dominant-baseline: middle;
+        text-anchor: middle;
+        alignment-baseline: mathematical;
+    ">382W</text>
+
+</svg>
+<script>
+    const numSegments = 30;
+
+    // Use this to scale the overall width of the segments
+    const segmentPadding = 2;
+
+    // Ratio: outer edge width / inner edge width. 1.0 is a rectangle, >1.0 is 'pear-shaped'
+    const pearShapedRatio = 1.0;
+
+    const filledSegments = Math.round(numSegments * 0.67);
+
+    const svgNS = "http://www.w3.org/2000/svg";
+    const segmentGroup = document.getElementById("segments");
+
+    // Core geometry
+    const innerRadius = 98;
+    const outerRadius = 122;
+
+    const innerWidth = segmentPadding;
+    const outerWidth = segmentPadding * pearShapedRatio;
+
+    for (let i = 0; i < numSegments; i++) {
+        const isFilled = i < filledSegments;
+        const angle = (i * 360) / numSegments - 90; // center of segment in degrees
+        const aRad = (angle * Math.PI) / 180;
+
+        // Angular width of segment
+        const segAngle = (360 / numSegments) * Math.PI / 180;
+        const halfAngle = segAngle / 2;
+
+        // Arc endpoints for inside arc
+        const theta0 = aRad - halfAngle;
+        const theta1 = aRad + halfAngle;
+
+        // Inner arc points
+        const x0 = Math.cos(theta0) * innerRadius;
+        const y0 = Math.sin(theta0) * innerRadius;
+        const x1 = Math.cos(theta1) * innerRadius;
+        const y1 = Math.sin(theta1) * innerRadius;
+
+        // Outer arc points (scaled by ratio)
+        const x2 = Math.cos(theta1) * outerRadius;
+        const y2 = Math.sin(theta1) * outerRadius;
+        const x3 = Math.cos(theta0) * outerRadius;
+        const y3 = Math.sin(theta0) * outerRadius;
+
+        // Offset points outward by half width, varies by pearShapedRatio
+        const ix0 = x0 - Math.sin(theta0) * (innerWidth / 2);
+        const iy0 = y0 + Math.cos(theta0) * (innerWidth / 2);
+
+        const ix1 = x1 + Math.sin(theta1) * (innerWidth / 2);
+        const iy1 = y1 - Math.cos(theta1) * (innerWidth / 2);
+
+        const ox2 = x2 + Math.sin(theta1) * (outerWidth / 2);
+        const oy2 = y2 - Math.cos(theta1) * (outerWidth / 2);
+
+        const ox3 = x3 - Math.sin(theta0) * (outerWidth / 2);
+        const oy3 = y3 + Math.cos(theta0) * (outerWidth / 2);
+
+        // SVG arc flags
+        const largeArcFlag = 0; // never more than half a circle
+        const sweepFlagInner = 1;
+        const sweepFlagOuter = 0;
+
+        const pathData = [
+            `M ${ix0.toFixed(2)} ${iy0.toFixed(2)}`,
+            `A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} ${sweepFlagInner} ${ix1.toFixed(2)} ${iy1.toFixed(2)}`,
+            `L ${ox2.toFixed(2)} ${oy2.toFixed(2)}`,
+            `A ${outerRadius} ${outerRadius} 0 ${largeArcFlag} ${sweepFlagOuter} ${ox3.toFixed(2)} ${oy3.toFixed(2)}`,
+            "Z"
+        ].join(" ");
+
+        const g = document.createElementNS(svgNS, "g");
+        const path = document.createElementNS(svgNS, "path");
+        path.setAttribute("d", pathData);
+        path.setAttribute("fill", "#00ff00");
+        path.setAttribute("fill-opacity", isFilled ? "0.7" : "0.08");
+        if (isFilled) {
+            path.setAttribute("filter", "url(#segment-glow)");
+        }
+        path.setAttribute("stroke", "none");
+
+        g.appendChild(path);
+        segmentGroup.appendChild(g);
+    }
+</script>
+</body>
+</html>
