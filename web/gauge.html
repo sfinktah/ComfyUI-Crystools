@@ -257,16 +257,40 @@
         for (let i = 0; i < numSegments; i++) {
             const isFilled = i < filledSegments;
             const path = segmentElements[i];
+            const wasActive = path.classList.contains('active');
 
             // Update fill color
             path.setAttribute("fill", getSegmentColor(i, isFilled));
-            path.setAttribute("fill-opacity", isFilled ? "0.7" : "0.08");
 
-            // Update filter
             if (isFilled) {
+                // Segment is active
+                path.setAttribute("fill-opacity", "0.7");
                 path.setAttribute("filter", getGlowFilter(i));
+                path.classList.add('active');
+                
+                // Remove any fade-out transition
+                path.style.transition = '';
             } else {
+                // Segment is inactive
+                path.setAttribute("fill-opacity", "0.08");
                 path.removeAttribute("filter");
+                
+                // Add fade-out transition only if it was previously active
+                if (wasActive) {
+                    path.style.transition = 'fill-opacity 0.5s ease-out, filter 0.5s ease-out';
+                    
+                    // Force a reflow to ensure transition applies
+                    path.offsetHeight;
+                    
+                    // Remove active class after transition starts
+                    setTimeout(() => {
+                        path.classList.remove('active');
+                    }, 10);
+                } else {
+                    // Already inactive, no transition needed
+                    path.classList.remove('active');
+                    path.style.transition = '';
+                }
             }
         }
     }
