@@ -36,8 +36,8 @@
 </head>
 <body>
 <div class="controls">
-    <label>Value: <input type="range" id="valueSlider" min="0" max="100" value="67"></label>
-    <label>Start Angle: <input type="number" id="startAngle" value="-90" min="-360" max="360"></label>
+    <label>Value: <input type="range" id="valueSlider" min="0" max="100" value="100"></label>
+    <label>Start Angle: <input type="number" id="startAngle" value="135" min="-360" max="360"></label>
     <label>Hue: <input type="range" id="hueSlider" min="0" max="360" value="120"></label>
 </div>
 
@@ -60,20 +60,20 @@
         </filter>
 
         <filter id="segment-glow" x="-50%" y="-50%" width="200%" height="200%">
-            <feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="#00ff00"></feDropShadow>
+            <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="#00ff00"></feDropShadow>
         </filter>
 
         <filter id="segment-glow-amber" x="-50%" y="-50%" width="200%" height="200%">
-            <feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="#ffaa00"></feDropShadow>
+            <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="#ffaa00"></feDropShadow>
         </filter>
 
         <filter id="segment-glow-red" x="-50%" y="-50%" width="200%" height="200%">
-            <feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="#ff0000"></feDropShadow>
+            <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="#ff0000"></feDropShadow>
         </filter>
     </defs>
 
     <!-- Segments -->
-    <g id="segments" transform="translate(150,150)" filter="url(#glow)">
+    <g id="segments" transform="translate(150,150)">
     </g>
 
     <!-- Inner dome -->
@@ -90,7 +90,7 @@
         dominant-baseline: middle;
         text-anchor: middle;
         alignment-baseline: mathematical;
-    ">67%</text>
+    ">100%</text>
 
 </svg>
 <script>
@@ -100,8 +100,8 @@
     const pearShapedRatio = 1.0;
 
     // Dynamic settings
-    let currentValue = 67; // Percentage (0-100)
-    let startAngleDegrees = -90; // Starting angle in degrees (0 = right, -90 = top)
+    let currentValue = 100; // Percentage (0-100)
+    let startAngleDegrees = 135; // Starting angle in degrees (0 = right, -90 = top)
     let baseHue = 120; // Base hue (0-360, 120 = green)
 
     // Color transition settings
@@ -133,37 +133,38 @@
 
     // Get color for a segment based on its position on the gauge
     function getSegmentColor(segmentIndex, isFilled) {
-        if (!isFilled) {
-            return hslToHex(baseHue, 100, 20); // Dim version of base color
-        }
-
         if (!enableColorTransition) {
-            return hslToHex(baseHue, 100, 50);
+            return hslToHex(baseHue, 100, isFilled ? 50 : 20);
         }
 
-        // Calculate position from the end of the gauge (last segments)
-        const segmentsFromEnd = numSegments - segmentIndex - 1;
-
-        if (segmentsFromEnd < redThreshold) {
-            return hslToHex(0, 100, 50); // Red - last 2 segments
-        } else if (segmentsFromEnd < amberThreshold) {
-            return hslToHex(45, 100, 50); // Amber - last 6 segments (excluding the red ones)
+        let hue, lightness;
+        
+        if (segmentIndex >= numSegments - redThreshold) {
+            // Last 2 segments (28, 29) are red
+            hue = 0; // Pure red
+            lightness = isFilled ? 50 : 30; // Higher lightness for dim red to distinguish from amber
+        } else if (segmentIndex >= numSegments - amberThreshold) {
+            // Segments 24-27 are amber
+            hue = 45; // Amber
+            lightness = isFilled ? 50 : 20;
         } else {
-            return hslToHex(baseHue, 100, 50); // Base color
+            // All other segments use base hue
+            hue = baseHue;
+            lightness = isFilled ? 50 : 20;
         }
+        
+        return hslToHex(hue, 100, lightness);
     }
 
     // Get appropriate glow filter for a segment
-    function getGlowFilter(segmentIndex, isFilled) {
-        if (!isFilled || !enableColorTransition) {
+    function getGlowFilter(segmentIndex) {
+        if (!enableColorTransition) {
             return "url(#segment-glow)";
         }
 
-        const segmentsFromEnd = numSegments - segmentIndex - 1;
-
-        if (segmentsFromEnd < redThreshold) {
+        if (segmentIndex >= numSegments - redThreshold) {
             return "url(#segment-glow-red)";
-        } else if (segmentsFromEnd < amberThreshold) {
+        } else if (segmentIndex >= numSegments - amberThreshold) {
             return "url(#segment-glow-amber)";
         } else {
             return "url(#segment-glow)";
@@ -248,7 +249,7 @@
             path.setAttribute("fill-opacity", isFilled ? "0.7" : "0.08");
 
             if (isFilled) {
-                path.setAttribute("filter", getGlowFilter(i, isFilled));
+                path.setAttribute("filter", getGlowFilter(i));
             }
             path.setAttribute("stroke", "none");
 
