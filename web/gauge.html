@@ -119,6 +119,9 @@
     const innerWidth = segmentPadding;
     const outerWidth = segmentPadding * pearShapedRatio;
 
+    // Cache for segment elements
+    let segmentElements = [];
+
     // Helper function to convert HSL to hex
     function hslToHex(h, s, l) {
         l /= 100;
@@ -184,21 +187,13 @@
         centerText.setAttribute('fill', baseColor + 'aa');
     }
 
-    function renderGauge() {
+    // Create all segments once - only called on initialization or angle change
+    function createSegments() {
         // Clear existing segments
         segmentGroup.innerHTML = '';
-
-        // Calculate number of filled segments
-        const filledSegments = Math.round(numSegments * (currentValue / 100));
-
-        // Update center text
-        centerText.textContent = Math.round(currentValue) + '%';
-
-        // Update filter colors
-        updateFilterColors();
+        segmentElements = [];
 
         for (let i = 0; i < numSegments; i++) {
-            const isFilled = i < filledSegments;
             const angle = (i * 360) / numSegments + startAngleDegrees;
             const aRad = (angle * Math.PI) / 180;
 
@@ -245,37 +240,78 @@
             const path = document.createElementNS(svgNS, "path");
 
             path.setAttribute("d", pathData);
-            path.setAttribute("fill", getSegmentColor(i, isFilled));
-            path.setAttribute("fill-opacity", isFilled ? "0.7" : "0.08");
-
-            if (isFilled) {
-                path.setAttribute("filter", getGlowFilter(i));
-            }
             path.setAttribute("stroke", "none");
 
             g.appendChild(path);
             segmentGroup.appendChild(g);
+
+            // Cache the element for efficient updates
+            segmentElements[i] = path;
         }
+    }
+
+    // Update only the properties of existing segments - called on value/hue changes
+    function updateSegments() {
+        const filledSegments = Math.round(numSegments * (currentValue / 100));
+
+        for (let i = 0; i < numSegments; i++) {
+            const isFilled = i < filledSegments;
+            const path = segmentElements[i];
+
+            // Update fill color
+            path.setAttribute("fill", getSegmentColor(i, isFilled));
+            path.setAttribute("fill-opacity", isFilled ? "0.7" : "0.08");
+
+            // Update filter
+            if (isFilled) {
+                path.setAttribute("filter", getGlowFilter(i));
+            } else {
+                path.removeAttribute("filter");
+            }
+        }
+    }
+
+    function renderGauge() {
+        // Update center text
+        centerText.textContent = Math.round(currentValue) + '%';
+
+        // Update filter colors
+        updateFilterColors();
+
+        // Update segments (efficient)
+        updateSegments();
+    }
+
+    function renderGaugeComplete() {
+        // Update center text
+        centerText.textContent = Math.round(currentValue) + '%';
+
+        // Update filter colors
+        updateFilterColors();
+
+        // Recreate segments (when angle changes)
+        createSegments();
+        updateSegments();
     }
 
     // Event listeners for controls
     document.getElementById('valueSlider').addEventListener('input', (e) => {
         currentValue = parseFloat(e.target.value);
-        renderGauge();
+        renderGauge(); // Fast update
     });
 
     document.getElementById('startAngle').addEventListener('input', (e) => {
         startAngleDegrees = parseFloat(e.target.value);
-        renderGauge();
+        renderGaugeComplete(); // Full rebuild
     });
 
     document.getElementById('hueSlider').addEventListener('input', (e) => {
         baseHue = parseFloat(e.target.value);
-        renderGauge();
+        renderGauge(); // Fast update
     });
 
     // Initial render
-    renderGauge();
+    renderGaugeComplete();
 
     // Optional: Animate the gauge
     function animateGauge() {
@@ -293,7 +329,7 @@
             currentValue = startValue + (targetValue - startValue) * eased;
 
             document.getElementById('valueSlider').value = currentValue;
-            renderGauge();
+            renderGauge(); // Fast update during animation
 
             if (progress < 1) {
                 requestAnimationFrame(animate);
