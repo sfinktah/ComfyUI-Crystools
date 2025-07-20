@@ -106,8 +106,8 @@
 
     // Color transition settings
     const enableColorTransition = true;
-    const amberThreshold = 6; // Last 6 segments turn amber
-    const redThreshold = 2; // Last 2 segments turn red
+    const amberThreshold = 6; // Last 6 segments on the gauge turn amber
+    const redThreshold = 2; // Last 2 segments on the gauge turn red
 
     const svgNS = "http://www.w3.org/2000/svg";
     const segmentGroup = document.getElementById("segments");
@@ -131,8 +131,8 @@
         return `#${f(0)}${f(8)}${f(4)}`;
     }
 
-    // Get color for a segment based on its position and fill status
-    function getSegmentColor(segmentIndex, isFilled, totalFilled) {
+    // Get color for a segment based on its position on the gauge
+    function getSegmentColor(segmentIndex, isFilled) {
         if (!isFilled) {
             return hslToHex(baseHue, 100, 20); // Dim version of base color
         }
@@ -141,25 +141,25 @@
             return hslToHex(baseHue, 100, 50);
         }
 
-        // Calculate how close this segment is to the end
-        const segmentsFromEnd = totalFilled - segmentIndex - 1;
+        // Calculate position from the end of the gauge (last segments)
+        const segmentsFromEnd = numSegments - segmentIndex - 1;
 
         if (segmentsFromEnd < redThreshold) {
-            return hslToHex(0, 100, 50); // Red
+            return hslToHex(0, 100, 50); // Red - last 2 segments
         } else if (segmentsFromEnd < amberThreshold) {
-            return hslToHex(45, 100, 50); // Amber
+            return hslToHex(45, 100, 50); // Amber - last 6 segments (excluding the red ones)
         } else {
             return hslToHex(baseHue, 100, 50); // Base color
         }
     }
 
     // Get appropriate glow filter for a segment
-    function getGlowFilter(segmentIndex, isFilled, totalFilled) {
+    function getGlowFilter(segmentIndex, isFilled) {
         if (!isFilled || !enableColorTransition) {
             return "url(#segment-glow)";
         }
 
-        const segmentsFromEnd = totalFilled - segmentIndex - 1;
+        const segmentsFromEnd = numSegments - segmentIndex - 1;
 
         if (segmentsFromEnd < redThreshold) {
             return "url(#segment-glow-red)";
@@ -244,11 +244,11 @@
             const path = document.createElementNS(svgNS, "path");
 
             path.setAttribute("d", pathData);
-            path.setAttribute("fill", getSegmentColor(i, isFilled, filledSegments));
+            path.setAttribute("fill", getSegmentColor(i, isFilled));
             path.setAttribute("fill-opacity", isFilled ? "0.7" : "0.08");
 
             if (isFilled) {
-                path.setAttribute("filter", getGlowFilter(i, isFilled, filledSegments));
+                path.setAttribute("filter", getGlowFilter(i, isFilled));
             }
             path.setAttribute("stroke", "none");
 
