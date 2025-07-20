@@ -12,41 +12,67 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            color: #00ff00;
+            font-family: monospace;
+        }
+        input[type="range"] {
+            width: 150px;
+        }
+        input[type="number"] {
+            width: 60px;
+            background: #222;
+            border: 1px solid #444;
+            color: #00ff00;
+            padding: 2px;
         }
     </style>
 </head>
 <body>
+<div class="controls">
+    <label>Value: <input type="range" id="valueSlider" min="0" max="100" value="67"></label>
+    <label>Start Angle: <input type="number" id="startAngle" value="-90" min="-360" max="360"></label>
+    <label>Hue: <input type="range" id="hueSlider" min="0" max="360" value="120"></label>
+</div>
+
 <svg width="300" height="300" viewBox="0 0 300 300">
     <!-- Matte bezel with dark grey-green tint -->
-    <circle cx="150" cy="150" r="152" fill="#050805"></circle> <!-- outer ring: deep green-black kinda drop shadow-->
-    <circle cx="150" cy="150" r="150" fill="#0c120c"></circle> <!-- recessed bezel center -->
-    <circle cx="150" cy="150" r="133" fill="none" stroke="#1a2a1a" stroke-width="1"></circle> <!-- bevel edge -->
-    <circle cx="150" cy="150" r="132" fill="none" stroke="#3a4a3a" stroke-width="1"></circle> <!-- soft inner edge -->
+    <circle cx="150" cy="150" r="152" fill="#050805"></circle>
+    <circle cx="150" cy="150" r="150" fill="#0c120c"></circle>
+    <circle cx="150" cy="150" r="133" fill="none" stroke="#1a2a1a" stroke-width="1"></circle>
+    <circle cx="150" cy="150" r="132" fill="none" stroke="#3a4a3a" stroke-width="1"></circle>
     <circle cx="150" cy="150" r="130" fill="#060906" stroke="none" stroke-width="0" class=""></circle>
-    <!-- segment-area background color -->
 
     <!-- Glow ring background -->
-    <circle cx="150" cy="150" r="90" fill="#020402" class=""></circle> <!-- outer ring: deep green-black kinda drop shadow-->
-    <circle cx="150" cy="150" r="88" fill="#000000" class=""></circle> <!-- recessed bezel center -->
+    <circle cx="150" cy="150" r="90" fill="#020402" class=""></circle>
+    <circle cx="150" cy="150" r="88" fill="#000000" class=""></circle>
 
-    <!-- bevel edge -->
-    <!--  <circle cx="150" cy="150" r="77" fill="none" stroke="#3a4a3a" stroke-width="1"/> &lt;!&ndash; soft inner edge &ndash;&gt;-->
-
-    <!-- Glow effect (only shows on the unlit segments AFAIK) -->
+    <!-- Glow effect -->
     <defs>
         <filter id="glow">
             <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="#00ff00" flood-opacity="0.5"></feDropShadow>
         </filter>
 
         <filter id="segment-glow" x="-50%" y="-50%" width="200%" height="200%">
-            <feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="#00ff00">
-                <!-- animation is barely visible and could be removed to save browser stress -->
-                <!--                <animate attributeName="flood-opacity" values="0.4;0.7;0.4" dur="1.5s" repeatCount="indefinite"></animate>-->
-            </feDropShadow>
+            <feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="#00ff00"></feDropShadow>
+        </filter>
+
+        <filter id="segment-glow-amber" x="-50%" y="-50%" width="200%" height="200%">
+            <feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="#ffaa00"></feDropShadow>
+        </filter>
+
+        <filter id="segment-glow-red" x="-50%" y="-50%" width="200%" height="200%">
+            <feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="#ff0000"></feDropShadow>
         </filter>
     </defs>
 
-    <!-- Segments - now empty, will be populated by JavaScript -->
+    <!-- Segments -->
     <g id="segments" transform="translate(150,150)" filter="url(#glow)">
     </g>
 
@@ -59,102 +85,225 @@
     <circle cx="150" cy="150" r="76" fill="url(#dome)"></circle>
 
     <!-- Center text -->
-    <text x="150" y="150" font-size="42" font-weight="300" text-anchor="middle" fill="#00ff00aa" style="
-        font-family: &quot;HD44780 5x8&quot;;
+    <text id="centerText" x="150" y="150" font-size="42" font-weight="300" text-anchor="middle" fill="#00ff00aa" style="
+        font-family: 'HD44780 5x8';
         dominant-baseline: middle;
         text-anchor: middle;
         alignment-baseline: mathematical;
-    ">382W</text>
+    ">67%</text>
 
 </svg>
 <script>
-    const numSegments = 8; // Now you can change this to any value
-
-    // Use this to scale the overall width of the segments
+    // Configuration constants
+    const numSegments = 30;
     const segmentPadding = 2;
-
-    // Ratio: outer edge width / inner edge width. 1.0 is a rectangle, >1.0 is 'pear-shaped'
     const pearShapedRatio = 1.0;
 
-    const filledSegments = Math.round(numSegments * 0.67);
+    // Dynamic settings
+    let currentValue = 67; // Percentage (0-100)
+    let startAngleDegrees = -90; // Starting angle in degrees (0 = right, -90 = top)
+    let baseHue = 120; // Base hue (0-360, 120 = green)
+
+    // Color transition settings
+    const enableColorTransition = true;
+    const amberThreshold = 6; // Last 6 segments turn amber
+    const redThreshold = 2; // Last 2 segments turn red
 
     const svgNS = "http://www.w3.org/2000/svg";
     const segmentGroup = document.getElementById("segments");
-
-    // Clear any existing segments (in case this script runs multiple times)
-    segmentGroup.innerHTML = '';
+    const centerText = document.getElementById("centerText");
 
     // Core geometry
     const innerRadius = 98;
     const outerRadius = 122;
-
     const innerWidth = segmentPadding;
     const outerWidth = segmentPadding * pearShapedRatio;
 
-    for (let i = 0; i < numSegments; i++) {
-        const isFilled = i < filledSegments;
-        const angle = (i * 360) / numSegments - 90; // center of segment in degrees
-        const aRad = (angle * Math.PI) / 180;
-
-        // Angular width of segment
-        const segAngle = (360 / numSegments) * Math.PI / 180;
-        const halfAngle = segAngle / 2;
-
-        // Arc endpoints for inside arc
-        const theta0 = aRad - halfAngle;
-        const theta1 = aRad + halfAngle;
-
-        // Inner arc points
-        const x0 = Math.cos(theta0) * innerRadius;
-        const y0 = Math.sin(theta0) * innerRadius;
-        const x1 = Math.cos(theta1) * innerRadius;
-        const y1 = Math.sin(theta1) * innerRadius;
-
-        // Outer arc points (scaled by ratio)
-        const x2 = Math.cos(theta1) * outerRadius;
-        const y2 = Math.sin(theta1) * outerRadius;
-        const x3 = Math.cos(theta0) * outerRadius;
-        const y3 = Math.sin(theta0) * outerRadius;
-
-        // Offset points outward by half width, varies by pearShapedRatio
-        const ix0 = x0 - Math.sin(theta0) * (innerWidth / 2);
-        const iy0 = y0 + Math.cos(theta0) * (innerWidth / 2);
-
-        const ix1 = x1 + Math.sin(theta1) * (innerWidth / 2);
-        const iy1 = y1 - Math.cos(theta1) * (innerWidth / 2);
-
-        const ox2 = x2 + Math.sin(theta1) * (outerWidth / 2);
-        const oy2 = y2 - Math.cos(theta1) * (outerWidth / 2);
-
-        const ox3 = x3 - Math.sin(theta0) * (outerWidth / 2);
-        const oy3 = y3 + Math.cos(theta0) * (outerWidth / 2);
-
-        // SVG arc flags
-        const largeArcFlag = 0; // never more than half a circle
-        const sweepFlagInner = 1;
-        const sweepFlagOuter = 0;
-
-        const pathData = [
-            `M ${ix0.toFixed(2)} ${iy0.toFixed(2)}`,
-            `A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} ${sweepFlagInner} ${ix1.toFixed(2)} ${iy1.toFixed(2)}`,
-            `L ${ox2.toFixed(2)} ${oy2.toFixed(2)}`,
-            `A ${outerRadius} ${outerRadius} 0 ${largeArcFlag} ${sweepFlagOuter} ${ox3.toFixed(2)} ${oy3.toFixed(2)}`,
-            "Z"
-        ].join(" ");
-
-        const g = document.createElementNS(svgNS, "g");
-        const path = document.createElementNS(svgNS, "path");
-        path.setAttribute("d", pathData);
-        path.setAttribute("fill", "#00ff00");
-        path.setAttribute("fill-opacity", isFilled ? "0.7" : "0.08");
-        if (isFilled) {
-            path.setAttribute("filter", "url(#segment-glow)");
-        }
-        path.setAttribute("stroke", "none");
-
-        g.appendChild(path);
-        segmentGroup.appendChild(g);
+    // Helper function to convert HSL to hex
+    function hslToHex(h, s, l) {
+        l /= 100;
+        const a = s * Math.min(l, 1 - l) / 100;
+        const f = n => {
+            const k = (n + h / 30) % 12;
+            const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+            return Math.round(255 * color).toString(16).padStart(2, '0');
+        };
+        return `#${f(0)}${f(8)}${f(4)}`;
     }
+
+    // Get color for a segment based on its position and fill status
+    function getSegmentColor(segmentIndex, isFilled, totalFilled) {
+        if (!isFilled) {
+            return hslToHex(baseHue, 100, 20); // Dim version of base color
+        }
+
+        if (!enableColorTransition) {
+            return hslToHex(baseHue, 100, 50);
+        }
+
+        // Calculate how close this segment is to the end
+        const segmentsFromEnd = totalFilled - segmentIndex - 1;
+
+        if (segmentsFromEnd < redThreshold) {
+            return hslToHex(0, 100, 50); // Red
+        } else if (segmentsFromEnd < amberThreshold) {
+            return hslToHex(45, 100, 50); // Amber
+        } else {
+            return hslToHex(baseHue, 100, 50); // Base color
+        }
+    }
+
+    // Get appropriate glow filter for a segment
+    function getGlowFilter(segmentIndex, isFilled, totalFilled) {
+        if (!isFilled || !enableColorTransition) {
+            return "url(#segment-glow)";
+        }
+
+        const segmentsFromEnd = totalFilled - segmentIndex - 1;
+
+        if (segmentsFromEnd < redThreshold) {
+            return "url(#segment-glow-red)";
+        } else if (segmentsFromEnd < amberThreshold) {
+            return "url(#segment-glow-amber)";
+        } else {
+            return "url(#segment-glow)";
+        }
+    }
+
+    // Update filter colors based on current hue
+    function updateFilterColors() {
+        const baseColor = hslToHex(baseHue, 100, 50);
+        document.querySelector('#segment-glow feDropShadow').setAttribute('flood-color', baseColor);
+
+        // Update dome gradient
+        const domeGradient = document.getElementById('dome');
+        domeGradient.querySelector('stop[offset="0%"]').setAttribute('stop-color', baseColor);
+
+        // Update center text color
+        centerText.setAttribute('fill', baseColor + 'aa');
+    }
+
+    function renderGauge() {
+        // Clear existing segments
+        segmentGroup.innerHTML = '';
+
+        // Calculate number of filled segments
+        const filledSegments = Math.round(numSegments * (currentValue / 100));
+
+        // Update center text
+        centerText.textContent = Math.round(currentValue) + '%';
+
+        // Update filter colors
+        updateFilterColors();
+
+        for (let i = 0; i < numSegments; i++) {
+            const isFilled = i < filledSegments;
+            const angle = (i * 360) / numSegments + startAngleDegrees;
+            const aRad = (angle * Math.PI) / 180;
+
+            // Angular width of segment
+            const segAngle = (360 / numSegments) * Math.PI / 180;
+            const halfAngle = segAngle / 2;
+
+            // Arc endpoints
+            const theta0 = aRad - halfAngle;
+            const theta1 = aRad + halfAngle;
+
+            // Inner arc points
+            const x0 = Math.cos(theta0) * innerRadius;
+            const y0 = Math.sin(theta0) * innerRadius;
+            const x1 = Math.cos(theta1) * innerRadius;
+            const y1 = Math.sin(theta1) * innerRadius;
+
+            // Outer arc points
+            const x2 = Math.cos(theta1) * outerRadius;
+            const y2 = Math.sin(theta1) * outerRadius;
+            const x3 = Math.cos(theta0) * outerRadius;
+            const y3 = Math.sin(theta0) * outerRadius;
+
+            // Offset points outward by half width
+            const ix0 = x0 - Math.sin(theta0) * (innerWidth / 2);
+            const iy0 = y0 + Math.cos(theta0) * (innerWidth / 2);
+            const ix1 = x1 + Math.sin(theta1) * (innerWidth / 2);
+            const iy1 = y1 - Math.cos(theta1) * (innerWidth / 2);
+            const ox2 = x2 + Math.sin(theta1) * (outerWidth / 2);
+            const oy2 = y2 - Math.cos(theta1) * (outerWidth / 2);
+            const ox3 = x3 - Math.sin(theta0) * (outerWidth / 2);
+            const oy3 = y3 + Math.cos(theta0) * (outerWidth / 2);
+
+            // SVG path
+            const pathData = [
+                `M ${ix0.toFixed(2)} ${iy0.toFixed(2)}`,
+                `A ${innerRadius} ${innerRadius} 0 0 1 ${ix1.toFixed(2)} ${iy1.toFixed(2)}`,
+                `L ${ox2.toFixed(2)} ${oy2.toFixed(2)}`,
+                `A ${outerRadius} ${outerRadius} 0 0 0 ${ox3.toFixed(2)} ${oy3.toFixed(2)}`,
+                "Z"
+            ].join(" ");
+
+            const g = document.createElementNS(svgNS, "g");
+            const path = document.createElementNS(svgNS, "path");
+
+            path.setAttribute("d", pathData);
+            path.setAttribute("fill", getSegmentColor(i, isFilled, filledSegments));
+            path.setAttribute("fill-opacity", isFilled ? "0.7" : "0.08");
+
+            if (isFilled) {
+                path.setAttribute("filter", getGlowFilter(i, isFilled, filledSegments));
+            }
+            path.setAttribute("stroke", "none");
+
+            g.appendChild(path);
+            segmentGroup.appendChild(g);
+        }
+    }
+
+    // Event listeners for controls
+    document.getElementById('valueSlider').addEventListener('input', (e) => {
+        currentValue = parseFloat(e.target.value);
+        renderGauge();
+    });
+
+    document.getElementById('startAngle').addEventListener('input', (e) => {
+        startAngleDegrees = parseFloat(e.target.value);
+        renderGauge();
+    });
+
+    document.getElementById('hueSlider').addEventListener('input', (e) => {
+        baseHue = parseFloat(e.target.value);
+        renderGauge();
+    });
+
+    // Initial render
+    renderGauge();
+
+    // Optional: Animate the gauge
+    function animateGauge() {
+        const targetValue = Math.random() * 100;
+        const startValue = currentValue;
+        const duration = 1000;
+        const startTime = Date.now();
+
+        function animate() {
+            const elapsed = Date.now() - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+
+            // Smooth easing
+            const eased = 1 - Math.pow(1 - progress, 3);
+            currentValue = startValue + (targetValue - startValue) * eased;
+
+            document.getElementById('valueSlider').value = currentValue;
+            renderGauge();
+
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            }
+        }
+
+        animate();
+    }
+
+    // Uncomment the line below to enable random animation every 3 seconds
+    // setInterval(animateGauge, 3000);
 </script>
 </body>
 </html>
