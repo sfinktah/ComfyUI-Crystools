@@ -18,45 +18,45 @@
 <body>
 <svg width="300" height="300" viewBox="0 0 300 300">
     <!-- Matte bezel with dark grey-green tint -->
-    <circle cx="150" cy="150" r="152" fill="#050805"/> <!-- outer ring: deep green-black kinda drop shadow-->
-    <circle cx="150" cy="150" r="150" fill="#0c120c"/> <!-- recessed bezel center -->
-    <circle cx="150" cy="150" r="133" fill="none" stroke="#1a2a1a" stroke-width="1"/> <!-- bevel edge -->
-    <circle cx="150" cy="150" r="132" fill="none" stroke="#3a4a3a" stroke-width="1"/> <!-- soft inner edge -->
-    <circle cx="150" cy="150" r="130" fill="#060906" stroke="none" stroke-width="0"/>
+    <circle cx="150" cy="150" r="152" fill="#050805"></circle> <!-- outer ring: deep green-black kinda drop shadow-->
+    <circle cx="150" cy="150" r="150" fill="#0c120c"></circle> <!-- recessed bezel center -->
+    <circle cx="150" cy="150" r="133" fill="none" stroke="#1a2a1a" stroke-width="1"></circle> <!-- bevel edge -->
+    <circle cx="150" cy="150" r="132" fill="none" stroke="#3a4a3a" stroke-width="1"></circle> <!-- soft inner edge -->
+    <circle cx="150" cy="150" r="130" fill="#060906" stroke="none" stroke-width="0" class=""></circle>
     <!-- segment-area background color -->
 
     <!-- Glow ring background -->
-    <circle cx="150" cy="150" r="90" fill="#050805"/> <!-- outer ring: deep green-black kinda drop shadow-->
-    <circle cx="150" cy="150" r="88" fill="#0c120c"/> <!-- recessed bezel center -->
-    <circle cx="150" cy="150" r="87" fill="#0f130f"/>
-    <circle cx="150" cy="150" r="78" fill="#000000" stroke="#000000" stroke-width="2"/> <!-- bevel edge -->
+    <circle cx="150" cy="150" r="90" fill="#020402" class=""></circle> <!-- outer ring: deep green-black kinda drop shadow-->
+    <circle cx="150" cy="150" r="88" fill="#000000" class=""></circle> <!-- recessed bezel center -->
+
+    <!-- bevel edge -->
     <!--  <circle cx="150" cy="150" r="77" fill="none" stroke="#3a4a3a" stroke-width="1"/> &lt;!&ndash; soft inner edge &ndash;&gt;-->
 
     <!-- Glow effect (only shows on the unlit segments AFAIK) -->
     <defs>
         <filter id="glow">
-            <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="#00ff00" flood-opacity="0.5"/>
+            <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="#00ff00" flood-opacity="0.5"></feDropShadow>
         </filter>
 
         <filter id="segment-glow" x="-50%" y="-50%" width="200%" height="200%">
             <feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="#00ff00">
                 <!-- animation is barely visible and could be removed to save browser stress -->
-                <animate attributeName="flood-opacity" values="0.4;0.7;0.4" dur="1.5s" repeatCount="indefinite"/>
+<!--                <animate attributeName="flood-opacity" values="0.4;0.7;0.4" dur="1.5s" repeatCount="indefinite"></animate>-->
             </feDropShadow>
         </filter>
     </defs>
 
     <!-- Segments -->
     <g id="segments" transform="translate(150,150)" filter="url(#glow)">
-    </g>
+        <g><path d="M -9.25 -97.57 A 98 98 0 0 1 9.25 -97.57 L 11.76 -121.44 A 122 122 0 0 0 -11.76 -121.44 Z" fill="#00ff00" fill-opacity="0.7" filter="url(#segment-glow)" stroke="none"></path></g><g><path d="M 11.24 -97.36 A 98 98 0 0 1 29.33 -93.51 L 36.75 -116.34 A 122 122 0 0 0 13.75 -121.23 Z" fill="#00ff00" fill-opacity="0.7" filter="url(#segment-glow)" stroke="none"></path></g><g><path d="M 31.23 -92.89 A 98 98 0 0 1 48.13 -85.37 L 60.13 -106.16 A 122 122 0 0 0 38.65 -115.72 Z" fill="#00ff00" fill-opacity="0.7" filter="url(#segment-glow)" stroke="none"></path></g><g><path d="M 49.87 -84.37 A 98 98 0 0 1 64.83 -73.50 L 80.89 -91.33 A 122 122 0 0 0 61.87 -105.16 Z" fill="#00ff00" fill-opacity="0.7" filter="url(#segment-glow)" stroke="none"></path></g><g><path d="M 66.32 -72.16 A 98 98 0 0 1 78.70 -58.41 L 98.11 -72.52 A 122 122 0 0 0 82.38 -89.99 Z" fill="#00ff00" fill-opacity="0.7" filter="url(#segment-glow)" stroke="none"></path></g><g><path d="M 79.87 -56.79 A 98 98 0 0 1 89.12 -40.77 L 111.05 -50.54 A 122 122 0 0 0 99.29 -70.90 Z" fill="#00ff00" fill-opacity="0.7" filter="url(#segment-glow)" stroke="none"></path></g><g><path d="M 89.93 -38.95 A 98 98 0 0 1 95.65 -21.35 L 119.13 -26.34 A 122 122 0 0 0 111.86 -48.71 Z" fill="#00ff00" fill-opacity="0.7" filter="url(#segment-glow)" stroke="none"></path></g><g><path d="M 96.07 -19.40 A 98 98 0 0 1 98.00 -1.00 L 122.00 -1.00 A 122 122 0 0 0 119.54 -24.39 Z" fill="#00ff00" fill-opacity="0.7" filter="url(#segment-glow)" stroke="none"></path></g><g><path d="M 98.00 1.00 A 98 98 0 0 1 96.07 19.40 L 119.54 24.39 A 122 122 0 0 0 122.00 1.00 Z" fill="#00ff00" fill-opacity="0.7" filter="url(#segment-glow)" stroke="none"></path></g><g><path d="M 95.65 21.35 A 98 98 0 0 1 89.93 38.95 L 111.86 48.71 A 122 122 0 0 0 119.13 26.34 Z" fill="#00ff00" fill-opacity="0.7" filter="url(#segment-glow)" stroke="none"></path></g><g><path d="M 89.12 40.77 A 98 98 0 0 1 79.87 56.79 L 99.29 70.90 A 122 122 0 0 0 111.05 50.54 Z" fill="#00ff00" fill-opacity="0.7" filter="url(#segment-glow)" stroke="none"></path></g><g><path d="M 78.70 58.41 A 98 98 0 0 1 66.32 72.16 L 82.38 89.99 A 122 122 0 0 0 98.11 72.52 Z" fill="#00ff00" fill-opacity="0.7" filter="url(#segment-glow)" stroke="none"></path></g><g><path d="M 64.83 73.50 A 98 98 0 0 1 49.87 84.37 L 61.87 105.16 A 122 122 0 0 0 80.89 91.33 Z" fill="#00ff00" fill-opacity="0.7" filter="url(#segment-glow)" stroke="none"></path></g><g><path d="M 48.13 85.37 A 98 98 0 0 1 31.23 92.89 L 38.65 115.72 A 122 122 0 0 0 60.13 106.16 Z" fill="#00ff00" fill-opacity="0.7" filter="url(#segment-glow)" stroke="none"></path></g><g><path d="M 29.33 93.51 A 98 98 0 0 1 11.24 97.36 L 13.75 121.23 A 122 122 0 0 0 36.75 116.34 Z" fill="#00ff00" fill-opacity="0.7" filter="url(#segment-glow)" stroke="none"></path></g><g><path d="M 9.25 97.57 A 98 98 0 0 1 -9.25 97.57 L -11.76 121.44 A 122 122 0 0 0 11.76 121.44 Z" fill="#00ff00" fill-opacity="0.7" filter="url(#segment-glow)" stroke="none"></path></g><g><path d="M -11.24 97.36 A 98 98 0 0 1 -29.33 93.51 L -36.75 116.34 A 122 122 0 0 0 -13.75 121.23 Z" fill="#00ff00" fill-opacity="0.7" filter="url(#segment-glow)" stroke="none"></path></g><g><path d="M -31.23 92.89 A 98 98 0 0 1 -48.13 85.37 L -60.13 106.16 A 122 122 0 0 0 -38.65 115.72 Z" fill="#00ff00" fill-opacity="0.7" filter="url(#segment-glow)" stroke="none"></path></g><g><path d="M -49.87 84.37 A 98 98 0 0 1 -64.83 73.50 L -80.89 91.33 A 122 122 0 0 0 -61.87 105.16 Z" fill="#00ff00" fill-opacity="0.7" filter="url(#segment-glow)" stroke="none"></path></g><g><path d="M -66.32 72.16 A 98 98 0 0 1 -78.70 58.41 L -98.11 72.52 A 122 122 0 0 0 -82.38 89.99 Z" fill="#00ff00" fill-opacity="0.7" filter="url(#segment-glow)" stroke="none"></path></g><g><path d="M -79.87 56.79 A 98 98 0 0 1 -89.12 40.77 L -111.05 50.54 A 122 122 0 0 0 -99.29 70.90 Z" fill="#00ff00" fill-opacity="0.08" stroke="none"></path></g><g><path d="M -89.93 38.95 A 98 98 0 0 1 -95.65 21.35 L -119.13 26.34 A 122 122 0 0 0 -111.86 48.71 Z" fill="#00ff00" fill-opacity="0.08" stroke="none"></path></g><g><path d="M -96.07 19.40 A 98 98 0 0 1 -98.00 1.00 L -122.00 1.00 A 122 122 0 0 0 -119.54 24.39 Z" fill="#00ff00" fill-opacity="0.08" stroke="none"></path></g><g><path d="M -98.00 -1.00 A 98 98 0 0 1 -96.07 -19.40 L -119.54 -24.39 A 122 122 0 0 0 -122.00 -1.00 Z" fill="#00ff00" fill-opacity="0.08" stroke="none"></path></g><g><path d="M -95.65 -21.35 A 98 98 0 0 1 -89.93 -38.95 L -111.86 -48.71 A 122 122 0 0 0 -119.13 -26.34 Z" fill="#00ff00" fill-opacity="0.08" stroke="none"></path></g><g><path d="M -89.12 -40.77 A 98 98 0 0 1 -79.87 -56.79 L -99.29 -70.90 A 122 122 0 0 0 -111.05 -50.54 Z" fill="#00ff00" fill-opacity="0.08" stroke="none"></path></g><g><path d="M -78.70 -58.41 A 98 98 0 0 1 -66.32 -72.16 L -82.38 -89.99 A 122 122 0 0 0 -98.11 -72.52 Z" fill="#00ff00" fill-opacity="0.08" stroke="none"></path></g><g><path d="M -64.83 -73.50 A 98 98 0 0 1 -49.87 -84.37 L -61.87 -105.16 A 122 122 0 0 0 -80.89 -91.33 Z" fill="#00ff00" fill-opacity="0.08" stroke="none"></path></g><g><path d="M -48.13 -85.37 A 98 98 0 0 1 -31.23 -92.89 L -38.65 -115.72 A 122 122 0 0 0 -60.13 -106.16 Z" fill="#00ff00" fill-opacity="0.08" stroke="none"></path></g><g><path d="M -29.33 -93.51 A 98 98 0 0 1 -11.24 -97.36 L -13.75 -121.23 A 122 122 0 0 0 -36.75 -116.34 Z" fill="#00ff00" fill-opacity="0.08" stroke="none"></path></g></g>
 
     <!-- Inner dome -->
     <radialGradient id="dome" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" stop-color="#00ff00" stop-opacity="0.075"/>
-        <stop offset="100%" stop-color="#000000" stop-opacity="0.111145"/>
+        <stop offset="0%" stop-color="#00ff00" stop-opacity="0.075"></stop>
+        <stop offset="100%" stop-color="#000000" stop-opacity="0.111145"></stop>
     </radialGradient>
-    <circle cx="150" cy="150" r="77" fill="#00000088"/>
-    <circle cx="150" cy="150" r="76" fill="url(#dome)"/>
+    <circle cx="150" cy="150" r="77" fill="#00000088"></circle>
+    <circle cx="150" cy="150" r="76" fill="url(#dome)"></circle>
 
     <!-- Center text -->
     <text x="150" y="150" font-size="42" font-weight="300" text-anchor="middle" fill="#00ff00aa" style="
