@@ -106,8 +106,8 @@
 
     // Color transition settings
     const enableColorTransition = true;
-    const amberThreshold = 6; // Last 6 segments on the gauge turn amber
-    const redThreshold = 2; // Last 2 segments on the gauge turn red
+    const amberThreshold = Math.ceil(numSegments * 0.2); // Last 20% of segments turn amber (6 segments)
+    const redThreshold = Math.ceil(numSegments * 0.1); // Last 10% of segments turn red (3 segments)
 
     const svgNS = "http://www.w3.org/2000/svg";
     const segmentGroup = document.getElementById("segments");
